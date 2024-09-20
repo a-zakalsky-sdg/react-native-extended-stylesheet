@@ -10,22 +10,52 @@
  * Adding key augmention is tracked here: https://github.com/Microsoft/TypeScript/issues/12754
  */
 
-import {StyleSheet} from 'react-native';
+import { StyleSheet, ImageStyle, TextStyle, ViewStyle } from 'react-native';
 
-export = EStyleSheet;
+type KeyStringWithPrefix = `$${string}` | `@${string}`;
+type ValueStringWithPrefix = `$${string}` | `${string}rem`;
+
+
+type Value<T> = T | ((...args: any[]) => T) | ((string | boolean | null) & {});
+type Variable<T> = Value<T>;
+type Extended<T> = { [K in keyof T]: T[K] | ValueStringWithPrefix | ((...args: any[]) => T[K]); } & { [key: string]: any }
+
+type AnyStyle = ImageStyle & TextStyle & ViewStyle;
+
+export type EStyleSet<T = any> = {
+    [K in keyof T]:
+    T[K] extends KeyStringWithPrefix ? any :
+    T[K] extends Variable<number> ? T[K] :
+    T[K] extends MediaQuery ? T[K] :
+    Extended<AnyStyle>
+}
+type StyleSet<T = any> = {
+    [K in keyof T]:
+    T[K] extends KeyStringWithPrefix ? any :
+    T[K] extends MediaQuery ? any :
+    T[K] extends number ? T[K] :
+    T[K] extends boolean ? T[K] :
+    T[K] extends string ? T[K] :
+    T[K] extends AnyStyle ? AnyStyle :
+    any
+}
+
+export type StyleConst = Extended<AnyStyle>;
+
+type MediaQuery = { [key: string]: Extended<AnyStyle> };
+
+export default EStyleSheet;
 
 declare namespace EStyleSheet {
-    type AnyObject<T = {}> = T & {[key: string]: any};
+    type AnyObject = { [key: string]: any };
     type Event = 'build';
-
-
-    export function create<T>(styles: AnyObject<T>): AnyObject<T>;
-    export function build<T>(rawGlobalVars?: T): void;
-    export function value<T>(expr: any, prop?: string): any;
-    export function child<T>(styles: T, styleName: string, index: number, count: number): T;
+    export function create<T = EStyleSet>(styles: EStyleSet<T>): StyleSet<T>;
+    export function build(rawGlobalVars?: AnyObject): void;
+    export function value(expr: any, prop?: string): any;
+    export function child(styles: AnyObject, styleName: string, index: number, count: number): AnyObject;
     export function subscribe(event: Event, listener: () => any): void;
     export function clearCache(): void;
-  
+
     // inherited from StyleSheet
     export const flatten: typeof StyleSheet.flatten;
     export const setStyleAttributePreprocessor: typeof StyleSheet.setStyleAttributePreprocessor;
