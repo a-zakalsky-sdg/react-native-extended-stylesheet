@@ -15,7 +15,6 @@ import { StyleSheet, ImageStyle, TextStyle, ViewStyle } from 'react-native';
 type KeyStringWithPrefix = `$${string}` | `@${string}`;
 type ValueStringWithPrefix = `$${string}` | `${string}rem`;
 
-
 type Value<T> = T | ((...args: any[]) => T) | ((string | boolean | null) & {});
 type Variable<T> = Value<T>;
 type Extended<T> = { [K in keyof T]: T[K] | ValueStringWithPrefix | ((...args: any[]) => T[K]); } & { [key: string]: any }
@@ -40,6 +39,8 @@ type StyleSet<T = any> = {
     any
 }
 
+type StyleSetWithPrefix<T> = StyleSet<T> & { [K in `_${Exclude<keyof T, symbol | KeyStringWithPrefix>}`]: StyleSet<T>[keyof StyleSet<T>] };
+
 export type StyleConst = Extended<AnyStyle>;
 
 type MediaQuery = { [key: string]: Extended<AnyStyle> };
@@ -49,7 +50,7 @@ export default EStyleSheet;
 declare namespace EStyleSheet {
     type AnyObject = { [key: string]: any };
     type Event = 'build';
-    export function create<T = EStyleSet>(styles: EStyleSet<T>): StyleSet<T>;
+    export function create<T = EStyleSet>(styles: EStyleSet<T>): StyleSetWithPrefix<T>;
     export function build(rawGlobalVars?: AnyObject): void;
     export function value(expr: any, prop?: string): any;
     export function child(styles: AnyObject, styleName: string, index: number, count: number): AnyObject;
