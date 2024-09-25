@@ -35,7 +35,7 @@ type StyleSet<T = any> = {
     T[K] extends number ? T[K] :
     T[K] extends boolean ? T[K] :
     T[K] extends string ? T[K] :
-    T[K] extends AnyStyle ? AnyStyle :
+    T[K] extends AnyStyle ? (T[K] & AnyStyle) :
     any
 }
 
